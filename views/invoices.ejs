@@ -6,6 +6,7 @@
     <title><%= title %></title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         :root {
             --primary-color: #00486d;
@@ -74,8 +75,55 @@
         </div>
 
         <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
+            <div class="card-body" x-data="{ 
+                activeFilter: 'all',
+                invoices: <%= JSON.stringify(invoices) %>,
+                get filteredInvoices() {
+                    if (this.activeFilter === 'all') return this.invoices;
+                    return this.invoices.filter(invoice => invoice.status.toLowerCase() === this.activeFilter);
+                },
+                get counts() {
+                    return {
+                        all: this.invoices.length,
+                        overdue: this.invoices.filter(inv => inv.status === 'OVERDUE').length,
+                        pending: this.invoices.filter(inv => inv.status === 'PENDING').length,
+                        paid: this.invoices.filter(inv => inv.status === 'PAID').length
+                    };
+                }
+            }">
                 <% if (invoices && invoices.length > 0) { %>
+                    <!-- Filter Buttons -->
+                    <div class="mb-4 flex flex-wrap gap-2">
+                        <button 
+                            class="btn btn-sm"
+                            :class="activeFilter === 'all' ? 'btn-primary' : 'btn-outline'"
+                            @click="activeFilter = 'all'"
+                        >
+                            All (<span x-text="counts.all"></span>)
+                        </button>
+                        <button 
+                            class="btn btn-sm"
+                            :class="activeFilter === 'overdue' ? 'btn-primary' : 'btn-outline'"
+                            @click="activeFilter = 'overdue'"
+                        >
+                            Overdue (<span x-text="counts.overdue"></span>)
+                        </button>
+                        <button 
+                            class="btn btn-sm"
+                            :class="activeFilter === 'pending' ? 'btn-primary' : 'btn-outline'"
+                            @click="activeFilter = 'pending'"
+                        >
+                            Pending (<span x-text="counts.pending"></span>)
+                        </button>
+                        <button 
+                            class="btn btn-sm"
+                            :class="activeFilter === 'paid' ? 'btn-primary' : 'btn-outline'"
+                            @click="activeFilter = 'paid'"
+                        >
+                            Paid (<span x-text="counts.paid"></span>)
+                        </button>
+                    </div>
+                    
                     <div class="overflow-x-auto">
                         <table class="table w-full">
                             <thead>
@@ -90,29 +138,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% invoices.forEach(function(invoice) { %>
+                                <template x-for="invoice in filteredInvoices" :key="invoice.id">
                                     <tr>
-                                        <td class="font-mono">#<%= invoice.id %></td>
-                                        <td class="font-semibold"><%= invoice.customer_name %></td>
+                                        <td class="font-mono" x-text="'#' + invoice.id"></td>
+                                        <td class="font-semibold" x-text="invoice.customer_name"></td>
                                         <td>
-                                            <a href="/invoice/<%= invoice.id %>" class="link link-primary hover:link-secondary">
-                                                <%= invoice.description %>
-                                            </a>
+                                            <a :href="'/invoice/' + invoice.id" class="link link-primary hover:link-secondary" x-text="invoice.description"></a>
                                         </td>
-                                        <td><%= new Date(invoice.created_date).toLocaleDateString() %></td>
-                                        <td><%= new Date(invoice.due_date).toLocaleDateString() %></td>
+                                        <td x-text="new Date(invoice.created_date).toLocaleDateString()"></td>
+                                        <td x-text="new Date(invoice.due_date).toLocaleDateString()"></td>
                                         <td>
-                                            <% if (invoice.status === 'PAID') { %>
-                                                <div class="badge badge-success">Paid</div>
-                                            <% } else if (invoice.status === 'PENDING') { %>
-                                                <div class="badge badge-warning">Pending</div>
-                                            <% } else if (invoice.status === 'OVERDUE') { %>
-                                                <div class="badge badge-error">Overdue</div>
-                                            <% } %>
+                                            <div class="badge" 
+                                                 :class="{
+                                                     'badge-success': invoice.status === 'PAID',
+                                                     'badge-warning': invoice.status === 'PENDING', 
+                                                     'badge-error': invoice.status === 'OVERDUE'
+                                                 }"
+                                                 x-text="invoice.status === 'PAID' ? 'Paid' : invoice.status === 'PENDING' ? 'Pending' : 'Overdue'">
+                                            </div>
                                         </td>
-                                        <td class="text-right font-semibold">R<%= parseFloat(invoice.total).toFixed(2) %></td>
+                                        <td class="text-right font-semibold" x-text="'R' + parseFloat(invoice.total).toFixed(2)"></td>
                                     </tr>
-                                <% }); %>
+                                </template>
                             </tbody>
                         </table>
                     </div>
