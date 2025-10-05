@@ -1,0 +1,14 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-write --allow-ffi src/main.ts",
+    "start": "deno run --allow-net --allow-read --allow-write --allow-ffi src/main.ts",
+    "setup-db": "deno run --allow-write --allow-read --allow-ffi scripts/setup-db.ts"
+  },
+  "imports": {
+    "oak": "https://deno.land/x/oak@v12.6.1/mod.ts",
+    "ejs": "https://deno.land/x/dejs@0.10.3/mod.ts",
+    "path": "https://deno.land/std@0.204.0/path/mod.ts",
+    "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
+    "base64": "https://deno.land/std@0.203.0/encoding/base64.ts"
+   }
+}

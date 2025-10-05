@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capitec Business Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.9/dist/typography.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --fallback-s: 72.2%;
+      --fallback-sf: 72.2%;
+      --s: 72.2%;
+      --sf: 72.2%;
+      --fallback-sc: 0.743;
+      --sc: 0.743;
+      --fallback-sfc: 0.743;
+      --sfc: 0.743;
+      --primary: 200 100% 21%; /* #00486d - dark blue */
+      --secondary: 7 81% 57%; /* #e63934 - red */
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-white">
+    <!-- Hero Section -->
+    <div class="hero min-h-screen">
+      <div class="hero-content text-center">
+        <div class="max-w-md">
+          <div class="mb-8">
+            <h1 class="text-5xl font-bold text-primary">Capitec</h1>
+            <h2 class="text-3xl font-semibold text-secondary">Invoice Tracker</h2>
+          </div>
+                    
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <% if (typeof user !== 'undefined' && user) { %>
+
+            <% } else { %>
+              <!-- Guest user buttons -->
+              <a href="/login" class="btn btn-primary btn-lg">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
+                Sign In
+              </a>
+              <a href="/register" class="btn btn-secondary btn-lg btn-outline">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+                Create Account
+              </a>
+            <% } %>
+          </div>
+          
+          <% if (typeof user !== 'undefined' && user) { %>
+            <!-- Welcome message for authenticated users -->
+            <div class="mt-8 alert alert-info">
+              <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Welcome back, <strong><%= user.username %></strong>!</span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
