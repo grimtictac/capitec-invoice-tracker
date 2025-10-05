@@ -16,32 +16,39 @@
     <div class="card bg-base-50 p-4 mb-4">
       <h4 class="font-semibold mb-3">Add New Item</h4>
       <form hx-post="/invoices/<%= invoiceId %>/items" hx-target="#items-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="md:col-span-2">
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Description Input -->
+          <div class="form-control w-full">
             <input 
               type="text" 
               name="description" 
-              placeholder="Item description (e.g., Labor, Parts, Materials)" 
+              placeholder="Item description" 
               class="input input-bordered w-full"
               required
             />
           </div>
-          <div class="flex gap-2">
-            <input 
-              type="number" 
-              name="amount" 
-              placeholder="Amount" 
-              class="input input-bordered flex-1"
-              step="0.01"
-              min="0"
-              required
-            />
-            <button type="submit" class="btn btn-primary">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              Add
-            </button>
+          
+          <!-- Amount and Add Button Row -->
+          <div class="flex gap-2 w-full">
+            <div class="flex-1">
+              <input 
+                type="number" 
+                name="amount" 
+                placeholder="Amount" 
+                class="input input-bordered w-full"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+            <div class="flex-shrink-0">
+              <button type="submit" class="btn btn-primary whitespace-nowrap">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add
+              </button>
+            </div>
           </div>
         </div>
       </form>
