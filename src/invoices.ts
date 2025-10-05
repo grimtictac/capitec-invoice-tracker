@@ -2,6 +2,7 @@ import { Router, Context } from "oak";
 import { renderFileToString } from "ejs";
 import { join } from "path";
 import { DatabaseSync } from "node:sqlite";
+import { getSendGridService, InvoiceEmailData } from "./sendgrid.ts";
 
 interface User {
   id: number;
@@ -332,6 +333,153 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
       console.error("Error getting total:", error);
       ctx.response.status = 500;
       ctx.response.body = "R0.00";
+    }
+  });
+
+  // POST /invoices/:id/send-reminder - Send overdue reminder email
+  router.post("/invoices/:id/send-reminder", async (ctx: Context<State>) => {
+    try {
+      const url = new URL(ctx.request.url);
+      const pathSegments = url.pathname.split('/');
+      const invoiceId = pathSegments[pathSegments.length - 2]; // invoices/ID/send-reminder
+      
+      // Get form data for email override
+      const body = ctx.request.body();
+      let overrideEmail: string | null = null;
+      
+      if (body.type === "form") {
+        const formData = await body.value;
+        overrideEmail = formData.get("override_email")?.toString() || null;
+      }
+      
+      // Get invoice details with customer email
+      const invoiceQuery = `
+        SELECT 
+          i.id,
+          c.name as customer_name,
+          c.email as customer_email,
+          i.description,
+          i.created_date,
+          i.due_date,
+          i.paid_date,
+          COALESCE(SUM(ii.amount), 0) as total
+        FROM invoices i
+        LEFT JOIN customers c ON i.customer_id = c.id
+        LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
+        WHERE i.id = ?
+        GROUP BY i.id, c.name, c.email, i.description, i.created_date, i.due_date, i.paid_date
+      `;
+      
+      const invoice = db.prepare(invoiceQuery).get(invoiceId) as unknown as (Invoice & {customer_email: string}) | undefined;
+      
+      if (!invoice) {
+        ctx.response.body = `
+          <div class="alert alert-error">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Invoice not found</span>
+          </div>
+        `;
+        return;
+      }
+
+      // Check if invoice is actually overdue
+      const today = new Date();
+      const dueDate = new Date(invoice.due_date);
+      const isOverdue = !invoice.paid_date && dueDate < today;
+
+      if (!isOverdue) {
+        ctx.response.body = `
+          <div class="alert alert-warning">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <span>Invoice is not overdue</span>
+          </div>
+        `;
+        return;
+      }
+
+      // Send overdue reminder email
+      const sendGridService = getSendGridService();
+      if (!sendGridService) {
+        ctx.response.body = `
+          <div class="alert alert-error">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Email service not configured</span>
+          </div>
+        `;
+        return;
+      }
+
+      if (!invoice.customer_email && !overrideEmail) {
+        ctx.response.body = `
+          <div class="alert alert-error">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Customer email not found and no override email provided</span>
+          </div>
+        `;
+        return;
+      }
+
+      // Get invoice items
+      const itemsQuery = `
+        SELECT description, amount
+        FROM invoice_items
+        WHERE invoice_id = ?
+        ORDER BY id
+      `;
+      const items = db.prepare(itemsQuery).all(invoiceId) as Array<{description: string, amount: number}>;
+
+      const invoiceEmailData: InvoiceEmailData = {
+        customerName: invoice.customer_name,
+        invoiceId: invoice.id,
+        description: invoice.description,
+        dueDate: invoice.due_date,
+        total: invoice.total,
+        items: items
+      };
+
+      // Use override email if provided, otherwise use customer email
+      const emailAddress = overrideEmail || invoice.customer_email;
+      const success = await sendGridService.sendInvoiceOverdueEmail(emailAddress, invoiceEmailData);
+
+      if (success) {
+        const emailUsed = overrideEmail ? `${overrideEmail} (override)` : invoice.customer_email;
+        ctx.response.body = `
+          <div class="alert alert-success">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Overdue reminder sent successfully to ${emailUsed}</span>
+          </div>
+        `;
+      } else {
+        ctx.response.body = `
+          <div class="alert alert-error">
+            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Failed to send reminder email</span>
+          </div>
+        `;
+      }
+
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+      ctx.response.body = `
+        <div class="alert alert-error">
+          <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>Internal server error</span>
+        </div>
+      `;
     }
   });
 

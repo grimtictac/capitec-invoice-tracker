@@ -6,6 +6,7 @@
     <title><%= title %></title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         :root {
             --primary-color: #00486d;
@@ -168,7 +169,107 @@
                 </svg>
                 Back to Invoices
             </a>
+            
+            <% if (invoice.status === 'OVERDUE') { %>
+                <button 
+                    class="btn btn-secondary"
+                    onclick="showEmailModal()"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Send Reminder
+                </button>
+            <% } %>
         </div>
+        
+        <!-- Reminder Result -->
+        <div id="reminder-result" class="mt-4"></div>
     </div>
+
+    <!-- Email Override Modal -->
+    <dialog id="email_modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg text-primary">Send Overdue Reminder</h3>
+            <p class="py-4">Would you like to override the customer's email address?</p>
+            
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Customer Email</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="customer-email-input" 
+                    class="input input-bordered w-full" 
+                    placeholder="Enter email address"
+                />
+                <label class="label">
+                    <span class="label-text-alt text-gray-500">Leave blank to use default customer email</span>
+                </label>
+            </div>
+            
+            <div class="modal-action">
+                <button class="btn btn-ghost" onclick="closeEmailModal()">Cancel</button>
+                <button 
+                    class="btn btn-secondary"
+                    onclick="sendReminderEmail()"
+                    id="send-reminder-btn"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Send Reminder
+                    <span id="modal-loading" class="loading loading-spinner loading-sm ml-2 hidden"></span>
+                </button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <script>
+        function showEmailModal() {
+            document.getElementById('email_modal').showModal();
+        }
+        
+        function closeEmailModal() {
+            document.getElementById('email_modal').close();
+            document.getElementById('customer-email-input').value = '';
+            document.getElementById('reminder-result').innerHTML = '';
+        }
+        
+        function sendReminderEmail() {
+            const emailInput = document.getElementById('customer-email-input');
+            const loadingSpinner = document.getElementById('modal-loading');
+            const sendButton = document.getElementById('send-reminder-btn');
+            
+            // Show loading state
+            loadingSpinner.classList.remove('hidden');
+            sendButton.disabled = true;
+            
+            // Prepare form data
+            const formData = new FormData();
+            if (emailInput.value.trim()) {
+                formData.append('override_email', emailInput.value.trim());
+            }
+            
+            // Send HTMX request
+            htmx.ajax('POST', '/invoices/<%= invoice.id %>/send-reminder', {
+                values: Object.fromEntries(formData),
+                target: '#reminder-result',
+                swap: 'innerHTML'
+            }).then(() => {
+                // Hide loading state and close modal
+                loadingSpinner.classList.add('hidden');
+                sendButton.disabled = false;
+                closeEmailModal();
+            }).catch(() => {
+                // Hide loading state on error
+                loadingSpinner.classList.add('hidden');
+                sendButton.disabled = false;
+            });
+        }
+    </script>
 </body>
 </html>
