@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #00486d;
+            --secondary-color: #e63934;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #003a5a !important;
+            border-color: #003a5a !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d12e29 !important;
+            border-color: #d12e29 !important;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost normal-case text-xl text-primary">Capitec Invoice Tracker</a>
+        </div>
+        <div class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/" class="btn btn-ghost">Home</a></li>
+                <li><a href="/invoices" class="btn btn-ghost">Invoices</a></li>
+                <li><a href="/transactions" class="btn btn-ghost">Transactions</a></li>
+                <li>
+                    <form action="/logout" method="POST" class="inline">
+                        <button type="submit" class="btn btn-ghost">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <div class="text-sm breadcrumbs mb-6">
+            <ul>
+                <li><a href="/" class="text-primary">Home</a></li>
+                <li><a href="/invoices" class="text-primary">Invoices</a></li>
+                <li><%= title %></li>
+            </ul>
+        </div>
+
+        <!-- Invoice Header -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-primary mb-2"><%= title %></h1>
+                        <p class="text-gray-600"><%= invoice.description %></p>
+                    </div>
+                    <div class="text-right">
+                        <% if (invoice.status === 'PAID') { %>
+                            <div class="badge badge-success badge-lg">Paid</div>
+                        <% } else if (invoice.status === 'PENDING') { %>
+                            <div class="badge badge-warning badge-lg">Pending</div>
+                        <% } else if (invoice.status === 'OVERDUE') { %>
+                            <div class="badge badge-error badge-lg">Overdue</div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="stat bg-base-200 rounded-lg">
+                        <div class="stat-title">Customer</div>
+                        <div class="stat-value text-lg"><%= invoice.customer_name %></div>
+                    </div>
+                    <div class="stat bg-base-200 rounded-lg">
+                        <div class="stat-title">Created Date</div>
+                        <div class="stat-value text-lg"><%= new Date(invoice.created_date).toLocaleDateString() %></div>
+                    </div>
+                    <div class="stat bg-base-200 rounded-lg">
+                        <div class="stat-title">Due Date</div>
+                        <div class="stat-value text-lg"><%= new Date(invoice.due_date).toLocaleDateString() %></div>
+                    </div>
+                </div>
+
+                <% if (invoice.paid_date) { %>
+                    <div class="alert alert-success mt-4">
+                        <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Invoice was paid on <%= new Date(invoice.paid_date).toLocaleDateString() %></span>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Invoice Items -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-4">Invoice Items</h2>
+                
+                <% if (items && items.length > 0) { %>
+                    <div class="overflow-x-auto">
+                        <table class="table w-full">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% items.forEach(function(item) { %>
+                                    <tr>
+                                        <td><%= item.description %></td>
+                                        <td class="text-right font-semibold">R<%= parseFloat(item.amount).toFixed(2) %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-base-200">
+                                    <th>Total:</th>
+                                    <th class="text-right text-primary font-bold text-lg">
+                                        R<%= parseFloat(invoice.total).toFixed(2) %>
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-8">
+                        <div class="text-gray-500 mb-4">
+                            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-gray-500">No items found for this invoice</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-4">
+            <a href="/invoices" class="btn btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Invoices
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -86,7 +86,11 @@
                                     <tr>
                                         <td class="font-mono">#<%= invoice.id %></td>
                                         <td class="font-semibold"><%= invoice.customer_name %></td>
-                                        <td><%= invoice.description %></td>
+                                        <td>
+                                            <a href="/invoice/<%= invoice.id %>" class="link link-primary hover:link-secondary">
+                                                <%= invoice.description %>
+                                            </a>
+                                        </td>
                                         <td><%= new Date(invoice.created_date).toLocaleDateString() %></td>
                                         <td><%= new Date(invoice.due_date).toLocaleDateString() %></td>
                                         <td>
