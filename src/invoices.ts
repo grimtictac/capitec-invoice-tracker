@@ -176,5 +176,78 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
     }
   });
 
+  // GET /invoices/new - Show new invoice form
+  router.get("/invoices/new", async (ctx: Context<State>) => {
+    try {
+      // Get all customers for the dropdown
+      const customersQuery = "SELECT id, name FROM customers ORDER BY name";
+      const customers = db.prepare(customersQuery).all() as Array<{id: number, name: string}>;
+      
+      const html = await renderFileToString(join(Deno.cwd(), "views", "new-invoice.ejs"), {
+        customers: customers,
+        title: "Create New Invoice",
+        error: null
+      });
+      
+      ctx.response.body = html;
+    } catch (error) {
+      console.error("Error loading new invoice page:", error);
+      ctx.response.status = 500;
+      ctx.response.body = "Internal server error";
+    }
+  });
+
+  // POST /invoices - Create new invoice
+  router.post("/invoices", async (ctx: Context<State>) => {
+    try {
+      const body = ctx.request.body();
+      
+      if (body.type === "form") {
+        const formData = await body.value;
+        const customerId = formData.get("customer_id");
+        const description = formData.get("description");
+        const dueDate = formData.get("due_date");
+
+        console.log("Form Data:", { customerId, description, dueDate });
+
+        // Validation
+        if (!customerId || !description || !dueDate) {
+          const customersQuery = "SELECT id, name FROM customers ORDER BY name";
+          const customers = db.prepare(customersQuery).all() as Array<{id: number, name: string}>;
+          
+          const html = await renderFileToString(join(Deno.cwd(), "views", "new-invoice.ejs"), {
+            customers: customers,
+            title: "Create New Invoice",
+            error: "All fields are required"
+          });
+          
+          ctx.response.body = html;
+          return;
+        }
+
+        // Set created date to today
+        const createdDate = new Date().toISOString().split('T')[0];
+
+        // Insert the new invoice
+        const insertQuery = `
+          INSERT INTO invoices (customer_id, description, created_date, due_date, paid_date)
+          VALUES (?, ?, ?, ?, NULL)
+        `;
+        
+        const result = db.prepare(insertQuery).run(customerId, description, createdDate, dueDate);
+        
+        // Redirect to the new invoice detail page
+        ctx.response.redirect(`/invoice/${result.lastInsertRowid}`);
+      } else {
+        ctx.response.status = 400;
+        ctx.response.body = "Invalid form submission";
+      }
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      ctx.response.status = 500;
+      ctx.response.body = "Internal server error";
+    }
+  });
+
   return router;
 }

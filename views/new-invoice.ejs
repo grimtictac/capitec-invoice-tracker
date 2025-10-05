@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #00486d;
+            --secondary-color: #e63934;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #003a5a !important;
+            border-color: #003a5a !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d12e29 !important;
+            border-color: #d12e29 !important;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost normal-case text-xl text-primary">Capitec Invoice Tracker</a>
+        </div>
+        <div class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/" class="btn btn-ghost">Home</a></li>
+                <li><a href="/invoices" class="btn btn-ghost">Invoices</a></li>
+                <li>
+                    <form action="/logout" method="POST" class="inline">
+                        <button type="submit" class="btn btn-ghost">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <div class="text-sm breadcrumbs mb-6">
+            <ul>
+                <li><a href="/" class="text-primary">Home</a></li>
+                <li><a href="/invoices" class="text-primary">Invoices</a></li>
+                <li><%= title %></li>
+            </ul>
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h1 class="text-3xl font-bold text-primary mb-6"><%= title %></h1>
+                    
+                    <% if (error) { %>
+                        <div class="alert alert-error mb-6">
+                            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span><%= error %></span>
+                        </div>
+                    <% } %>
+
+                    <form action="/invoices" method="POST" class="space-y-6">
+                        <!-- Customer Selection -->
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text font-semibold">Customer *</span>
+                            </label>
+                            <select name="customer_id" class="select select-bordered w-full" required>
+                                <option value="">Select a customer</option>
+                                <% customers.forEach(function(customer) { %>
+                                    <option value="<%= customer.id %>"><%= customer.name %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+
+                        <!-- Invoice Description -->
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text font-semibold">Description *</span>
+                            </label>
+                            <textarea 
+                                name="description" 
+                                class="textarea textarea-bordered w-full h-24" 
+                                placeholder="Enter invoice description"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <!-- Due Date -->
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text font-semibold">Due Date *</span>
+                            </label>
+                            <input 
+                                type="date" 
+                                name="due_date" 
+                                class="input input-bordered w-full" 
+                                min="<%= new Date().toISOString().split('T')[0] %>"
+                                required
+                            />
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="card-actions justify-between pt-6">
+                            <a href="/invoices" class="btn btn-ghost">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Create Invoice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default due date to 30 days from today
+        document.addEventListener('DOMContentLoaded', function() {
+            const dueDateInput = document.querySelector('input[name="due_date"]');
+            if (dueDateInput && !dueDateInput.value) {
+                const today = new Date();
+                const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+                dueDateInput.value = thirtyDaysFromNow.toISOString().split('T')[0];
+            }
+        });
+    </script>
+</body>
+</html>
