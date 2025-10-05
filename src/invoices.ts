@@ -240,7 +240,9 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
           customerName: customer.name,
           description: description
         });
-        
+
+        console.log(`Invoice ${invoiceId} created for ${customer.name}`);
+
         ctx.response.body = html;
       } else {
         ctx.response.status = 400;
@@ -289,6 +291,8 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
         
         const _result = db.prepare(insertQuery).run(invoiceId, description, parseFloat(amount.toString()));
         
+        console.log(`Added ${description} to invoice ${invoiceId}`);
+
         // Return the new item HTML using EJS template
         const itemHtml = await renderFileToString(join(Deno.cwd(), "views", "new-invoice-item-row.ejs"), {
           description: description,
