@@ -1,8 +1,10 @@
 
 services:
   web:
-    build: .
-    container_name: deno-container
-    image: deno-image
+    image: registry.digitalocean.com/deno-on-digital-ocean/deno-image:1.0.6
+    container_name: capitec-invoice-tracker
     ports:
       - "8000:8000"
+    environment:
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL}
