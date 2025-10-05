@@ -13,6 +13,46 @@ interface State {
   user?: User;
 }
 
+interface Invoice {
+  id: number;
+  customer_name: string;
+  description: string;
+  created_date: string;
+  due_date: string;
+  paid_date: string | null;
+  total: number;
+}
+
+interface InvoiceWithStatus extends Invoice {
+  status: string;
+}
+
+// Function to set status for a single invoice based on payment and due dates
+function setStatus(invoice: Invoice): InvoiceWithStatus {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  
+  let status: string;
+  
+  if (invoice.paid_date) {
+    status = "PAID";
+  } else {
+    const dueDate = new Date(invoice.due_date);
+    dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    
+    if (dueDate >= today) {
+      status = "PENDING";
+    } else {
+      status = "OVERDUE";
+    }
+  }
+  
+  return {
+    ...invoice,
+    status
+  };
+}
+
 export function createInvoicesRouter(db: DatabaseSync): Router<State> {
   const router = new Router<State>();
 
@@ -45,10 +85,13 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
         ORDER BY i.created_date DESC
       `;
       
-      const invoices = db.prepare(query).all();
+      const invoices = db.prepare(query).all() as unknown as Invoice[];
+      
+      // Set status for each invoice
+      const invoicesWithStatus = invoices.map(setStatus);
       
       const html = await renderFileToString(join(Deno.cwd(), "views", "invoices.ejs"), { 
-        invoices: invoices,
+        invoices: invoicesWithStatus,
         title: "All Invoices"
       });
       
