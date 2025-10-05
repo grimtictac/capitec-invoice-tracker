@@ -4,6 +4,7 @@ import { renderFileToString } from "ejs";
 import { join } from "path";
 import { createRegisterRouter } from "./register.ts";
 import { createLoginRouter } from "./login.ts";
+import { createInvoicesRouter } from "./invoices.ts";
 
 interface User {
   id: number;
@@ -53,6 +54,7 @@ router.get("/", async (ctx: Context<State>) => {
 // Create and use the routers
 const registerRouter = createRegisterRouter(db);
 const loginRouter = createLoginRouter(db);
+const invoicesRouter = createInvoicesRouter(db);
 
 // Use the routers
 app.use(router.routes());
@@ -61,6 +63,8 @@ app.use(registerRouter.routes());
 app.use(registerRouter.allowedMethods());
 app.use(loginRouter.routes());
 app.use(loginRouter.allowedMethods());
+app.use(invoicesRouter.routes());
+app.use(invoicesRouter.allowedMethods());
 
 // Start the server
 console.log("Server running on http://localhost:8000");

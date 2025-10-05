@@ -61,6 +61,31 @@
               </svg>
               <span>Welcome back, <strong><%= user.username %></strong>!</span>
             </div>
+            
+            <!-- Navigation options for authenticated users -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <a href="/invoices" class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+                <div class="card-body text-center">
+                  <svg class="w-8 h-8 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <h3 class="card-title text-sm">Invoices</h3>
+                  <p class="text-xs text-gray-500">View all invoices</p>
+                </div>
+              </a>
+              
+              <form action="/logout" method="POST" class="inline">
+                <button type="submit" class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow w-full h-full">
+                  <div class="card-body text-center">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <h3 class="card-title text-sm">Logout</h3>
+                    <p class="text-xs text-gray-500">Sign out</p>
+                  </div>
+                </button>
+              </form>
+            </div>
           <% } %>
         </div>
       </div>

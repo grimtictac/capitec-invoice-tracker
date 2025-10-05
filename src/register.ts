@@ -20,7 +20,7 @@ export function createRegisterRouter(db: DatabaseSync): Router<State> {
   // Register page
   router.get("/register", async (ctx: Context<State>) => {
     if (ctx.state.user) {
-      ctx.response.redirect("/disputes");
+      ctx.response.redirect("/");
       return;
     }
     

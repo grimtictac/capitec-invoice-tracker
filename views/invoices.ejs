@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #00486d;
+            --secondary-color: #e63934;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #003a5a !important;
+            border-color: #003a5a !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d12e29 !important;
+            border-color: #d12e29 !important;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a class="btn btn-ghost normal-case text-xl text-primary">Capitec Invoice Tracker</a>
+        </div>
+        <div class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/" class="btn btn-ghost">Home</a></li>
+                <li><a href="/invoices" class="btn btn-ghost">Invoices</a></li>
+                <li>
+                    <form action="/logout" method="POST" class="inline">
+                        <button type="submit" class="btn btn-ghost">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-primary mb-2"><%= title %></h1>
+            <p class="text-gray-600">View all invoices with customer details and totals</p>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <% if (invoices && invoices.length > 0) { %>
+                    <div class="overflow-x-auto">
+                        <table class="table w-full">
+                            <thead>
+                                <tr>
+                                    <th>Invoice ID</th>
+                                    <th>Customer Name</th>
+                                    <th>Description</th>
+                                    <th>Created Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% invoices.forEach(function(invoice) { %>
+                                    <tr>
+                                        <td class="font-mono">#<%= invoice.id %></td>
+                                        <td class="font-semibold"><%= invoice.customer_name %></td>
+                                        <td><%= invoice.description %></td>
+                                        <td><%= new Date(invoice.created_date).toLocaleDateString() %></td>
+                                        <td><%= new Date(invoice.due_date).toLocaleDateString() %></td>
+                                        <td>
+                                            <% if (invoice.paid_date) { %>
+                                                <div class="badge badge-success">Paid</div>
+                                            <% } else { %>
+                                                <% 
+                                                    const dueDate = new Date(invoice.due_date);
+                                                    const today = new Date();
+                                                    const isOverdue = dueDate < today;
+                                                %>
+                                                <% if (isOverdue) { %>
+                                                    <div class="badge badge-error">Overdue</div>
+                                                <% } else { %>
+                                                    <div class="badge badge-warning">Pending</div>
+                                                <% } %>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-right font-semibold">R<%= parseFloat(invoice.total).toFixed(2) %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-8">
+                        <div class="text-gray-500 mb-4">
+                            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-gray-500">No invoices found</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

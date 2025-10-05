@@ -95,16 +95,9 @@ for (const [name, email] of sampleCustomers) {
 
 // Insert sample invoices
 const sampleInvoices = [
-  [1, "Kitchen Sink Installation and Plumbing", "2025-10-01", "2025-10-31", null],
-  [2, "Toilet Repair and Replacement Parts", "2025-10-02", "2025-11-01", "2025-10-15"],
-  [3, "Bathroom Renovation - Full Plumbing", "2025-10-03", "2025-11-02", null],
-  [1, "Drain Cleaning and Unblocking", "2025-10-04", "2025-11-03", "2025-10-20"],
-  [4, "Hot Water Cylinder Installation", "2025-10-05", "2025-11-04", null],
-  [5, "Pipe Leak Repair - Emergency Call", "2025-09-15", "2025-10-15", "2025-10-10"],
-  [2, "Tap Replacement and Basin Repair", "2025-09-20", "2025-10-20", null],
-  [3, "Geyser Replacement and Installation", "2025-09-25", "2025-10-25", "2025-10-22"],
-  [1, "Shower Head and Mixer Installation", "2025-09-30", "2025-10-30", null],
-  [4, "Main Water Line Repair and Replacement", "2025-10-01", "2025-11-15", null]
+  [1, "Kitchen Sink Installation and Plumbing", "2025-10-01", "2025-10-31", null],       // due soon... 
+  [2, "Toilet Repair and Replacement Parts", "2025-10-02", "2025-11-01", "2025-10-15"],  // already paid
+  [3, "Geyser Repair", "2025-09-02", "2025-10-01", null],                                // overdue!
 ];
 
 const invoiceStmt = db.prepare("INSERT INTO invoices (customer_id, description, created_date, due_date, paid_date) VALUES (:customer_id, :description, :created_date, :due_date, :paid_date)");
@@ -121,54 +114,21 @@ for (const [customer_id, description, created_date, due_date, paid_date] of samp
 
 // Insert sample invoice items (tasks and parts for each invoice)
 const sampleInvoiceItems = [
-  // Invoice 1: Kitchen Sink Installation and Plumbing
-  [1, "Kitchen sink unit", 320.00],
-  [1, "Sink installation labor", 280.00],
-  [1, "Plumbing pipes and fittings", 150.00],
-  [1, "Tap and mixer installation", 100.00],
+  // Invoice 1: Kitchen Sink Installation and Plumbing -- total should be R800.00
+  [1, "Kitchen sink unit", 400.00],
+  [1, "Sink installation labor", 300.00],
+  [1, "Plumbing pipes and fittings", 50.00],
+  [1, "Tap and mixer installation", 50.00],
 
-  // Invoice 2: Toilet Repair and Replacement Parts
-  [2, "Toilet cistern mechanism", 180.00],
-  [2, "Toilet seat replacement", 120.00],
-  [2, "Labor for toilet repair", 150.00],
+  // Invoice 2: Toilet Repair and Replacement Parts - total should be R500.00
+  [2, "Toilet cistern mechanism", 250.00],
+  [2, "Toilet seat replacement", 50.00],
+  [2, "Labor for toilet repair", 200.00],
 
-  // Invoice 3: Bathroom Renovation - Full Plumbing
-  [3, "Bathroom pipes rerouting", 800.00],
-  [3, "Shower installation labor", 450.00],
-  [3, "Toilet installation", 320.00],
-  [3, "Basin and taps installation", 280.00],
-  [3, "Waterproofing materials", 200.00],
-
-  // Invoice 4: Drain Cleaning and Unblocking
-  [4, "Drain cleaning labor", 180.00],
-  [4, "Drain snake equipment usage", 100.00],
-
-  // Invoice 5: Hot Water Cylinder Installation
-  [5, "150L hot water cylinder", 650.00],
-  [5, "Installation labor", 270.00],
-
-  // Invoice 6: Pipe Leak Repair - Emergency Call
-  [6, "Emergency call-out fee", 200.00],
-  [6, "Pipe repair materials", 150.00],
-  [6, "Leak repair labor", 300.00],
-
-  // Invoice 7: Tap Replacement and Basin Repair
-  [7, "Kitchen tap replacement", 180.00],
-  [7, "Basin repair materials", 80.00],
-  [7, "Labor for tap and basin work", 160.00],
-
-  // Invoice 8: Geyser Replacement and Installation
-  [8, "200L electric geyser", 800.00],
-  [8, "Geyser installation labor", 400.00],
-
-  // Invoice 9: Shower Head and Mixer Installation
-  [9, "Shower head and mixer set", 220.00],
-  [9, "Installation labor", 160.00],
-
-  // Invoice 10: Main Water Line Repair and Replacement
-  [10, "Main water line piping", 600.00],
-  [10, "Excavation and trenching", 450.00],
-  [10, "Connection and testing labor", 450.00]
+  // Invoice 3: Geyser Repair - total should be R400.00
+  [3, "After hours fee", 150.00],
+  [3, "New Valve", 100.00],
+  [3, "Labor for geyser repair", 150.00]
 ];
 
 const invoiceItemStmt = db.prepare("INSERT INTO invoice_items (invoice_id, description, amount) VALUES (:invoice_id, :description, :amount)");
