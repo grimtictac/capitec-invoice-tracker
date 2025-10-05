@@ -69,8 +69,13 @@ export function createLoginRouter(db: DatabaseSync): Router<State> {
     }
   });
 
-  // Logout handler
+  // Logout handlers (support both GET and POST)
   router.get("/logout", async (ctx: Context<State>) => {
+    await ctx.cookies.delete("session");
+    ctx.response.redirect("/login");
+  });
+
+  router.post("/logout", async (ctx: Context<State>) => {
     await ctx.cookies.delete("session");
     ctx.response.redirect("/login");
   });

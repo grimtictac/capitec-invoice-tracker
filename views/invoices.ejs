@@ -133,6 +133,7 @@
                                     <th>Description</th>
                                     <th>Created Date</th>
                                     <th>Due Date</th>
+                                    <th>Paid Date</th>
                                     <th>Status</th>
                                     <th class="text-right">Total Amount</th>
                                 </tr>
@@ -147,6 +148,10 @@
                                         </td>
                                         <td x-text="new Date(invoice.created_date).toLocaleDateString()"></td>
                                         <td x-text="new Date(invoice.due_date).toLocaleDateString()"></td>
+                                        <td>
+                                            <span x-show="invoice.paid_date" x-text="new Date(invoice.paid_date).toLocaleDateString()"></span>
+                                            <span x-show="!invoice.paid_date" class="text-gray-400">-</span>
+                                        </td>
                                         <td>
                                             <div class="badge" 
                                                  :class="{

@@ -96,8 +96,8 @@ for (const [name, email] of sampleCustomers) {
 // Insert sample invoices
 const sampleInvoices = [
   [1, "Kitchen Sink Installation and Plumbing", "2025-10-01", "2025-10-31", null],       // due soon... 
-  [2, "Toilet Repair and Replacement Parts", "2025-10-02", "2025-11-01", "2025-10-15"],  // already paid
-  [3, "Geyser Repair", "2025-09-02", "2025-10-01", null],                                // overdue!
+  [2, "Toilet Repair and Replacement Parts", "2025-09-01", "2025-10-01", "2025-09-15"],  // already paid
+  [3, "Geyser Repair", "2025-08-01", "2025-09-01", null],                                // overdue!
 ];
 
 const invoiceStmt = db.prepare("INSERT INTO invoices (customer_id, description, created_date, due_date, paid_date) VALUES (:customer_id, :description, :created_date, :due_date, :paid_date)");
