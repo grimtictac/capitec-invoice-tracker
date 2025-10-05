@@ -197,7 +197,7 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
     }
   });
 
-  // POST /invoices - Create new invoice
+  // POST /invoices - HTMX endpoint to create invoice and return items interface
   router.post("/invoices", async (ctx: Context<State>) => {
     try {
       const body = ctx.request.body();
@@ -208,20 +208,13 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
         const description = formData.get("description");
         const dueDate = formData.get("due_date");
 
-        console.log("Form Data:", { customerId, description, dueDate });
-
         // Validation
         if (!customerId || !description || !dueDate) {
-          const customersQuery = "SELECT id, name FROM customers ORDER BY name";
-          const customers = db.prepare(customersQuery).all() as Array<{id: number, name: string}>;
-          
-          const html = await renderFileToString(join(Deno.cwd(), "views", "new-invoice.ejs"), {
-            customers: customers,
-            title: "Create New Invoice",
-            error: "All fields are required"
-          });
-          
-          ctx.response.body = html;
+          ctx.response.body = `
+            <div class="alert alert-error">
+              <span>All fields are required</span>
+            </div>
+          `;
           return;
         }
 
@@ -235,9 +228,19 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
         `;
         
         const result = db.prepare(insertQuery).run(customerId, description, createdDate, dueDate);
+        const invoiceId = result.lastInsertRowid;
+
+        // Get customer name for display
+        const customer = db.prepare("SELECT name FROM customers WHERE id = ?").get(customerId) as {name: string};
+
+        // Return the items management interface using EJS template
+        const html = await renderFileToString(join(Deno.cwd(), "views", "new-invoice-items.ejs"), {
+          invoiceId: invoiceId,
+          customerName: customer.name,
+          description: description
+        });
         
-        // Redirect to the new invoice detail page
-        ctx.response.redirect(`/invoice/${result.lastInsertRowid}`);
+        ctx.response.body = html;
       } else {
         ctx.response.status = 400;
         ctx.response.body = "Invalid form submission";
@@ -245,7 +248,90 @@ export function createInvoicesRouter(db: DatabaseSync): Router<State> {
     } catch (error) {
       console.error("Error creating invoice:", error);
       ctx.response.status = 500;
-      ctx.response.body = "Internal server error";
+      ctx.response.body = `
+        <div class="alert alert-error">
+          <span>Error creating invoice</span>
+        </div>
+      `;
+    }
+  });
+
+  // POST /invoices/:id/items - HTMX endpoint to add item to invoice
+  router.post("/invoices/:id/items", async (ctx: Context<State>) => {
+    try {
+      const url = new URL(ctx.request.url);
+      const pathSegments = url.pathname.split('/');
+      const invoiceId = pathSegments[pathSegments.length - 2]; // invoices/ID/items
+      
+      const body = ctx.request.body();
+      
+      if (body.type === "form") {
+        const formData = await body.value;
+        const description = formData.get("description");
+        const amount = formData.get("amount");
+
+        if (!description || !amount) {
+          ctx.response.status = 400;
+          ctx.response.body = `
+            <div class="alert alert-error">
+              <span>Description and amount are required</span>
+            </div>
+          `;
+          return;
+        }
+
+        // Insert the item
+        const insertQuery = `
+          INSERT INTO invoice_items (invoice_id, description, amount)
+          VALUES (?, ?, ?)
+        `;
+        
+        const _result = db.prepare(insertQuery).run(invoiceId, description, parseFloat(amount.toString()));
+        
+        // Return the new item HTML using EJS template
+        const itemHtml = await renderFileToString(join(Deno.cwd(), "views", "new-invoice-item-row.ejs"), {
+          description: description,
+          amount: parseFloat(amount.toString()),
+          invoiceId: invoiceId
+        });
+        
+        ctx.response.body = itemHtml;
+      } else {
+        ctx.response.status = 400;
+        ctx.response.body = "Invalid form submission";
+      }
+    } catch (error) {
+      console.error("Error adding item:", error);
+      ctx.response.status = 500;
+      ctx.response.body = `
+        <div class="alert alert-error">
+          <span>Error adding item</span>
+        </div>
+      `;
+    }
+  });
+
+  // GET /invoices/:id/total - HTMX endpoint to get updated total
+  router.get("/invoices/:id/total", (ctx: Context<State>) => {
+    try {
+      const url = new URL(ctx.request.url);
+      const pathSegments = url.pathname.split('/');
+      const invoiceId = pathSegments[pathSegments.length - 2]; // invoices/ID/total
+      
+      // Calculate total from items
+      const totalQuery = `
+        SELECT COALESCE(SUM(amount), 0) as total
+        FROM invoice_items
+        WHERE invoice_id = ?
+      `;
+      
+      const result = db.prepare(totalQuery).get(invoiceId) as {total: number};
+      
+      ctx.response.body = `R${result.total.toFixed(2)}`;
+    } catch (error) {
+      console.error("Error getting total:", error);
+      ctx.response.status = 500;
+      ctx.response.body = "R0.00";
     }
   });
 

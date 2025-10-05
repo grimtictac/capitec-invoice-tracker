@@ -6,6 +6,7 @@
     <title><%= title %></title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         :root {
             --primary-color: #00486d;
@@ -83,7 +84,7 @@
                         </div>
                     <% } %>
 
-                    <form action="/invoices" method="POST" class="space-y-6">
+                    <form hx-post="/invoices" hx-target="#new-invoice-items" hx-swap="innerHTML" class="space-y-6">
                         <!-- Customer Selection -->
                         <div class="form-control w-full">
                             <label class="label">
@@ -142,6 +143,7 @@
                     </form>
                 </div>
             </div>
+            <div id="new-invoice-items"></div>
         </div>
     </div>
 

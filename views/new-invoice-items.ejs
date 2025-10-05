@@ -1,0 +1,83 @@
+<div class="card bg-base-100 shadow-xl mt-6">
+  <div class="card-body">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="text-2xl font-bold text-primary">Invoice #<%= invoiceId %> Created</h2>
+        <p class="text-gray-600"><%= customerName %> - <%= description %></p>
+      </div>
+      <div class="badge badge-success">New Invoice</div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <h3 id="invoice-items-heading" class="text-lg font-semibold mb-4">Invoice Items</h3>
+    
+    <!-- Add Item Form -->
+    <div class="card bg-base-50 p-4 mb-4">
+      <h4 class="font-semibold mb-3">Add New Item</h4>
+      <form hx-post="/invoices/<%= invoiceId %>/items" hx-target="#items-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <input 
+              type="text" 
+              name="description" 
+              placeholder="Item description (e.g., Labor, Parts, Materials)" 
+              class="input input-bordered w-full"
+              required
+            />
+          </div>
+          <div class="flex gap-2">
+            <input 
+              type="number" 
+              name="amount" 
+              placeholder="Amount" 
+              class="input input-bordered flex-1"
+              step="0.01"
+              min="0"
+              required
+            />
+            <button type="submit" class="btn btn-primary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Add
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Items List -->
+    <div id="items-list" class="space-y-2">
+      <!-- Items will be added here dynamically -->
+    </div>
+    
+    <!-- Total -->
+    <div class="mt-4 p-3 bg-base-200 rounded-lg">
+      <div class="flex justify-between items-center">
+        <span class="font-semibold">Total Amount:</span>
+        <span id="total-amount" class="font-bold text-lg text-primary">R0.00</span>
+      </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="card-actions justify-end mt-6">
+      <a href="/invoices" class="btn btn-ghost">View All Invoices</a>
+      <a href="/invoice/<%= invoiceId %>" class="btn btn-primary">View Invoice</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Scroll to Invoice Items section when the template loads
+  setTimeout(function() {
+    const invoiceItemsHeading = document.getElementById('invoice-items-heading');
+    if (invoiceItemsHeading) {
+      invoiceItemsHeading.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  }, 100);
+</script>
