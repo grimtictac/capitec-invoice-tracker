@@ -9,4 +9,6 @@ COPY . .
 # Cache the dependencies
 RUN deno cache src/main.ts
 
-CMD ["run", "--allow-net", "--allow-read", "--allow-write", "--allow-ffi", "src/main.ts"]
+RUN deno run --allow-write --allow-read --allow-ffi scripts/setup-db.ts
+
+CMD ["run", "--allow-net", "--allow-read", "--allow-write", "--allow-ffi", "--allow-env", "src/main.ts"]
